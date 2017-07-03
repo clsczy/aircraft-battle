@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+
+	<style>
+		#game{
+			width: 500px;
+			height: 500px;
+			background-color: #000;
+			margin:30px auto;
+			position: relative;
+		}
+	</style>
+</head>
+<body>
+	<div id="game">
+
+		
+	</div>
+	<script>
+
+	// window.onload = function(){
+		
+	// }
+	;(function(){
+
+
+		function getRandom(n,m){
+			 return  n +  Math.ceil( (m-n-1) * Math.random() ) ;
+		}
+
+		function Bullet(){
+			this.ele = document.createElement("span");
+			this.ele.style.position = "absolute";
+			this.ele.style.width    = "20px";
+			this.ele.style.height   = "20px";
+			this.ele.style.left     = getRandom(0,150) + "px";
+			this.ele.style.top      = getRandom(0,150) + "px";
+
+
+			this.dx =  getRandom(5,10);
+			this.dx =  Math.random() > 0.5 ?  this.dx : -1 * this.dx;
+
+			this.dy =  getRandom(5,10);
+			this.dy =  Math.random() > 0.5 ?  this.dy : -1 * this.dy;
+
+
+			this.ele.style.backgroundColor = "rgb( "+getRandom(100,255)+" ,"+getRandom(100,255)+" , "+getRandom(100,255)+")";
+
+			this.container = document.getElementById("game");
+			this.container.appendChild(this.ele);
+
+		}
+
+		Bullet.prototype.destory = function(){
+			this.container.removeChild(this.ele);
+		}
+
+		Bullet.prototype.move = function(){
+
+			// Left : [ 0 , game.with - this.elel.offWidth]
+			// Top: [ 0 , game.height- this.elel.offHeight]	
+			// 480 = 500 - 20
+			var oldleft = this.ele.offsetLeft;
+
+			if(oldleft > 480  || oldleft < 0){
+				this.dx = -1 * this.dx;
+			}
+			var newLeft = oldleft + this.dx;
+			this.ele.style.left = newLeft + "px";
+
+			var oldtop = this.ele.offsetTop;
+			if(oldtop > 480  || oldtop < 0){
+				this.dy = -1 * this.dy;
+			}
+			var newtop = oldtop + this.dy;
+
+			this.ele.style.top = newtop + "px";
+
+
+		}
+
+
+		function t (e) {
+			//用来更改 plane 的按钮状态
+			// this.keystatus[e.keyCode] = true;
+			if(this.keystatus.hasOwnProperty(e.keyCode)){
+				plane.keystatus[e.keyCode] = true;
+			}
+		}
+
+		function keyDown(e){
+			// console.info(e.keyCode);
+			t.call(plane,e);
+			console.info(plane.keystatus);
+			
+		}
+
+		function keyUp(e){
+			if(plane.keystatus.hasOwnProperty(e.keyCode)){
+				plane.keystatus[e.keyCode] = false;
+			}
+			console.info(plane.keystatus);
+		}
+
+		var plane = {
+			keystatus:{ //记录当前按钮的状态
+				38:false,
+				39:false,
+				40:false,
+				37:false
+			},
+			ele:document.createElement("div"),
+			speed:5,
+			destory:function(){//把自己销毁
+				
+				//从body中删除
+				document.getElementById("game").removeChild(this.ele);
+			},
+			init:function(){
+				var that = this;
+				this.ele.style.position="absolute";
+				this.ele.style.width = "32px";
+				this.ele.style.height = "32px";
+				this.ele.style.background = "url(plane2.png) no-repeat";
+				this.ele.style.top = (500-32)/2 + "px";
+				this.ele.style.left = (500-32)/2 + "px";
+				document.getElementById("game").appendChild(this.ele);
+
+				// 添加事件响应
+				document.body.addEventListener("keydown",keyDown)
+				document.body.addEventListener("keyup",keyUp)
+			},
+			move:function(){
+				//每次调用move，就是改位置
+				// console.info(this.keystatus)
+				//检测 keystatus中的四个属性的值，决定是向哪个方向移动
+				var oldtop  = this.ele.offsetTop,
+				    oldleft = this.ele.offsetLeft;
+				if(this.keystatus[40]) //下
+				{//把top改大
+					var newtop = oldtop + this.speed;
+					newtop  =  newtop > (500 - 32) ?  500 - 32 : newtop;
+					this.ele.style.top = newtop + 'px';
+					this.ele.style.transform = "rotate(180deg)"; //
+
+				}
+				else if(this.keystatus[38]) //上
+				{//top改小
+					var newtop = oldtop - this.speed;
+					newtop  =  newtop < 0 ?  0 : newtop;
+					this.ele.style.top = newtop + 'px';
+					this.ele.style.transform = "rotate(0deg)"; //
+
+				}
+				if(this.keystatus[39]) //右
+				{
+					//把left改大
+					var newleft = oldleft + this.speed;
+					newleft  =  newleft > (500 - 32) ?  500 - 32 : newleft;
+
+					this.ele.style.left = newleft + 'px';
+					this.ele.style.transform = "rotate(90deg)"; //
+				}
+				else if(this.keystatus[37]) //左
+				{
+					var newleft = oldleft - this.speed;
+					newleft  =  newleft < 0 ?  0 : newleft;
+
+					this.ele.style.left = newleft + 'px';
+					this.ele.style.transform = "rotate(-90deg)"; //
+
+				}
+
+				//同时按下左右，或者上下时 重新旋转角度
+				if(this.keystatus[37]  && this.keystatus[38]){ //左上
+					this.ele.style.transform = "rotate(-45deg)"; //
+				}
+
+				else if(this.keystatus[39]  && this.keystatus[38]){ //右上
+					this.ele.style.transform = "rotate(45deg)"; //
+				}
+
+				else if(this.keystatus[37]  && this.keystatus[40]){ //左下
+					this.ele.style.transform = "rotate(-135deg)"; //
+				}
+
+				else if(this.keystatus[39]  && this.keystatus[40]){ //右下
+					this.ele.style.transform = "rotate(135deg)"; //
+				}
+			}
+
+		}
+
+		var game = {
+			destory:function(){
+				
+				lastTime.destory();		//清除时间lastTime 从页面上删除
+				for (i = 0; i < this.actors.length; i++) {	//清除所有演员： 包括 子弹 和 飞机 从页面上删除
+					this.actors[i].destory();
+				}
+				
+				this.actors = [];		//同时把演员对象删除
+				this.currentNumber = 0;	//重置数量
+				this.lastTime = 0;		//重置用户坚持的时间
+				
+			},
+			lastTime:0, //用户坚持的时间 ms
+
+			over:function(){
+				var that = this;
+				var div;
+				//游戏结束了
+				if(document.getElementById("divover")){
+					div = document.getElementById("divover");
+					div.style.display = "block";
+				}
+				else
+				{
+					div = document.createElement("div");
+					div.id = "divover";
+
+					div.style.position="absolute";
+					div.style.zIndex = 2;
+					div.style.top = 0;
+					div.style.left = 0;
+					div.style.bottom = 0;
+					div.style.right = 0;
+					div.style.backgroundColor="rgba(0,0,0,.5)";
+
+					var button = document.createElement("button");
+					//按钮放在正中间
+					button.style.position="absolute";
+					button.style.top ="200px";
+					button.style.left = "50%";
+					button.style.transform = "translateX(-50%)";
+
+
+					button.innerHTML = "再来一次";
+					button.addEventListener("click",function(){
+						
+						that.destory();
+
+						that.start();
+					});
+
+
+					div.appendChild(button)
+
+					document.getElementById("game").appendChild(div);
+				}
+
+			},
+			isOver:function(){
+				var D    = 20,
+					t ,
+					x,
+					y,
+					x1,
+					y1,
+					i =0,
+					flag = false;
+				//检测所有的子弹与飞机的距离，如果小于 20，则认为是撞上了
+				//  下面的x,y是飞机正中心
+					x = plane.ele.offsetLeft + plane.ele.offsetWidth/2;
+					y = plane.ele.offsetTop + plane.ele.offsetHeight/2;
+
+					// console.info(x,y);
+
+					for (i = 0; i < this.actors.length; i++) {
+						t = this.actors[i];
+						if(t.constructor === Bullet){
+							//子弹的正中心
+							x1 = t.ele.offsetLeft + t.ele.offsetWidth /2;
+							y1 = t.ele.offsetTop  + t.ele.offsetHeight/2;
+
+							if( Math.pow(D,2) > ( Math.pow(x1-x,2) + Math.pow(y1-y,2)) ){
+								//撞上了
+								flag = true;
+								break;
+							}
+
+						}
+					}
+				//
+				return flag; 
+				
+			},
+			currentNumber:0,
+			bulletNumber:10,
+			actors:[],
+			timer:  0,
+			frameIndex:0,  //帧数
+			start:function(){
+
+				//开始游戏
+				if(document.getElementById("divover")){
+					div = document.getElementById("divover");
+					div.style.display = "none";
+				}
+
+				var that = this,
+					i    = 0;
+
+				// for(i = 0; i< this.bulletNumber; i++){
+				// 	this.actors.push ( new Bullet() );
+				// }
+				//让飞机就位
+				plane.init();
+				//把飞机加到演员表中
+				this.actors.push(plane);
+
+				//让时间就位
+				lastTime.init();
+
+				this.timer = setInterval(function(){
+
+
+					if(that.frameIndex %20 == 0 &&  that.bulletNumber > that.currentNumber){
+						// console.info(Date.now());
+						that.actors.push ( new Bullet() );
+						that.currentNumber++;
+					}
+					that.frameIndex++;
+					//每隔500ms产生一个子弹
+					// 第1次产生子弹   frameIndex = 0
+					// 第2次产生子弹   frameIndex = 20
+					// 第3次产生子弹   frameIndex = 40
+					// console.info(that.frameIndex);
+					for (i = 0; i < that.actors.length; i++) {
+						that.actors[i].move();
+					}
+
+					if( that.isOver() ) { //撞上了
+						 //停止；
+						 //alert("over");
+						// console.info("over");
+						// 
+						that.over();
+						document.body.removeEventListener("keydown",keyDown);
+						clearInterval(that.timer);
+					}
+					else{
+						that.lastTime += 25;
+						lastTime.update(that.lastTime/1000);
+						//显示坚持的时间
+						// console.info(that.lastTime / 1000 )
+					}
+
+				},25)
+				//开始游戏
+			}
+		};
+
+		var lastTime = {
+			destory:function(){
+
+				document.getElementById("game").removeChild(this.ele);
+			},
+			ele:document.createElement("div"),
+			init:function(){
+				this.ele.style.color ="#fff";
+				this.ele.style.position = "absolute";
+				this.ele.innerHTML = "0";
+
+				document.getElementById("game").appendChild(this.ele);
+			},
+			update:function(value){
+				this.ele.innerHTML = "你已经坚持了" + value + "秒";
+			}	
+		}
+
+		game.start();
+	})();
+
+	</script>
+</body>
+</html>
